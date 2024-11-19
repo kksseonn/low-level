@@ -1,70 +1,36 @@
 section .rodata
-    a: dd 0.5                   ; Константа a
-    b: dd 1.0                   ; Константа b
-    epsilon: dd 1.0e-6          ; Допустимая точность
-    max_iter: dd 1000           ; Максимальное число итераций
+a: dd 0.5
+b: dd 1.0
 
 section .bss
-    x: resd 1                   ; Переменная x (результат вычислений)
-    iter: resd 1                ; Счетчик итераций
+x: resd 1
+        ;log2(tg(x+a)) = b
+        ;tg(x+a) = 2^b
+        ;x=arctg(2^b)-a
+        ;ПОЛИЗ  2 b ^ arctg a -
 
 section .text
 global main
-
-solve_equation:
-    ; Инициализация
-    fldz                        ; x = 0.0
-    fstp dword [x]
-    mov dword [iter], 0         ; iter = 0
-
-iteration:
-    ; Увеличить счетчик итераций
-    mov eax, dword [iter]
-    inc eax
-    mov dword [iter], eax
-    cmp eax, dword [max_iter]
-    jge end                     ; Если iter >= max_iter, завершить
-
-    ; Вычислить tan(x + a)
-    fld dword [x]
-    fadd dword [a]
-    fptan
-    fstp st0                    ; Удаляем лишний результат (1.0)
-
-    ; Проверить на допустимость
-    ftst
-    fnstsw ax
-    sahf
-    je end                      ; Если tan(x + a) = 0, завершить
-
-    ; Вычислить log2(tan(x + a))
-    fld1
-    fyl2x
-
-    ; Проверить разницу с b
-    fld dword [b]
-    fsub
-    fabs
-    fld dword [epsilon]
-    fcomip st0, st1
-    jb solution_found
-
-    ; Итеративное обновление x
-    fld dword [x]
-    fld1
-    fadd
-    fstp dword [x]
-    jmp iteration
-
-solution_found:
-    fstp st0                    ; Очистка стека
-    ret
-
-end:
-    finit
-    ret
-
 main:
     mov rbp, rsp; for correct debugging
-    call solve_equation
+    fld dword [b]  ;ST(0) = b
+    fld1           ;ST(0) = 1, ST(1) = b
+    
+    fld st1 ;  дублируем показатель в стек
+    fprem ;  получаем дробную часть
+    f2xm1 ; возводим в дробную часть показателя
+    fadd ; прибавляем 1 из стека
+    fscale  ;ST(0) = 2^b, ST(1) = b
+    fstp st1
+
+    fld1                 
+    fpatan         ;ST(0) = arctan(2^b)
+
+    fld dword [a]        
+    fsub
+
+    fstp dword[x]
+    finit
+            
+    xor rax, rax
     ret

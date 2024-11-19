@@ -1,29 +1,53 @@
 section .data
-    exp_input dd 1.0             ; Входное значение для exp(x)
-    exp_result dd 0.0            ; Результат
-    coefficients dd 1.0, 0.5     ; Коэффициенты 1 и 0.5 (1 и 1/2)
+    exp_input dd 3.0                       ; Входное значение для exp(x)
+    exp_result dd 0.0                      ; Результат
+    coefficients dd 1.0, 1.0, 0.5, 0.16666667, 0.04166667 ; Коэффициенты для 0!, 1!, 2!, 3! и 4!
 
 section .text
 global main
 
 ; Функция для приближенного вычисления экспоненты
 calculate_exponential_sse:
-    movss xmm0, dword [exp_input]   ; Загружаем x в xmm0
-    movaps xmm1, xmm0                ; Копируем x в xmm1
-    addss xmm1, dword [coefficients] ; x + 1
+    ; Инициализация
+    movss xmm0, dword [exp_input]           ; Загружаем x в xmm0
+    movss xmm1, dword [coefficients]        ; Загружаем 1 (0!) в xmm1
 
-    mulss xmm0, xmm0                 ; x^2
-    mulss xmm0, dword [coefficients + 4] ; x^2 * 0.5
-    addss xmm1, xmm0                 ; x + 1 + x^2 / 2
+    ; x^1 / 1!
+    movaps xmm2, xmm0                       ; Копируем x в xmm2
+    mulss xmm2, dword [coefficients + 4]    ; xmm2 = x / 1
+    addss xmm1, xmm2                        ; xmm1 = 1 + x / 1
 
-    movss dword [exp_result], xmm1   ; Сохранить результат
+    ; x^2 / 2!
+    movaps xmm2, xmm0                       ; Копируем x в xmm2
+    mulss xmm2, xmm0                        ; xmm2 = x^2
+    mulss xmm2, dword [coefficients + 8]    ; xmm2 = x^2 / 2
+    addss xmm1, xmm2                        ; xmm1 += x^2 / 2
+
+    ; x^3 / 3!
+    movaps xmm2, xmm0                       ; Копируем x в xmm2
+    mulss xmm2, xmm0                        ; xmm2 = x^3
+    mulss xmm2, xmm0                        ; xmm2 = x^3
+    mulss xmm2, dword [coefficients + 12]   ; xmm2 = x^3 / 6
+    addss xmm1, xmm2                        ; xmm1 += x^3 / 6
+
+    ; x^4 / 4!
+    movaps xmm2, xmm0                       ; Копируем x в xmm2
+    mulss xmm2, xmm0                        ; xmm2 = x^4
+    mulss xmm2, xmm0                        ; xmm2 = x^4
+    mulss xmm2, xmm0                        ; xmm2 = x^4
+    mulss xmm2, dword [coefficients + 16]   ; xmm2 = x^4 / 24
+    addss xmm1, xmm2                        ; xmm1 += x^4 / 24
+
+    ; Сохранение результата
+    movss dword [exp_result], xmm1          ; Сохранить результат в память
     ret
 
 main:
+    mov rbp, rsp; for correct debugging
     ; Вызов реализации через SSE
     call calculate_exponential_sse
 
     ; Завершение программы
-    mov eax, 60                      ; Системный вызов exit
-    xor edi, edi                     ; Код завершения 0
-    ret
+    mov eax, 60                             ; Системный вызов exit
+    xor edi, edi                            ; Код завершения 0
+    ret                                ; Вызов системного вызова
