@@ -1,5 +1,5 @@
 section .data
-    exp_input dd 3.0                       ; Входное значение для exp(x)
+    exp_input dd 3.0                       ; Показатель степени
     exp_result dd 0.0                      ; Результат
     coefficients dd 1.0, 1.0, 0.5, 0.16666667, 0.04166667 ; Коэффициенты для 0!, 1!, 2!, 3! и 4!
 
@@ -39,15 +39,12 @@ calculate_exponential_sse:
     addss xmm1, xmm2                        ; xmm1 += x^4 / 24
 
     ; Сохранение результата
-    movss dword [exp_result], xmm1          ; Сохранить результат в память
+    movss dword [exp_result], xmm1          
     ret
 
 main:
-    mov rbp, rsp; for correct debugging
-    ; Вызов реализации через SSE
+    mov rbp, rsp
     call calculate_exponential_sse
-
-    ; Завершение программы
-    mov eax, 60                             ; Системный вызов exit
-    xor edi, edi                            ; Код завершения 0
-    ret                                ; Вызов системного вызова
+    mov eax, 60                             
+    xor edi, edi                            
+    ret                                
