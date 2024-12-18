@@ -1,44 +1,41 @@
 section .data
+<<<<<<< HEAD
+    a dd 8.0                               ; Значение a
+    x dd 6.0                               ; Значение x
+    b dd 3.0                               ; Значение b
+    c dd 2.0                               ; Значение c
+    y dd 0.0                               ; Результат y
+=======
     exp_input dd 3.0                       ; Показатель степени
     exp_result dd 0.0                      ; Результат
     coefficients dd 1.0, 1.0, 0.5, 0.16666667, 0.04166667 ; Коэффициенты для 0!, 1!, 2!, 3! и 4!
+>>>>>>> be6efe46df7b98f4602dad96e3ad3725cccca52d
 
 section .text
 global main
 
-; Функция для приближенного вычисления экспоненты
-calculate_exponential_sse:
-    ; Инициализация
-    movss xmm0, dword [exp_input]           ; Загружаем x в xmm0
-    movss xmm1, dword [coefficients]        ; Загружаем 1 (0!) в xmm1
+main:
+    mov rbp, rsp                           ; Для корректной отладки
 
-    ; x^1 / 1!
-    movaps xmm2, xmm0                       ; Копируем x в xmm2
-    mulss xmm2, dword [coefficients + 4]    ; xmm2 = x / 1
-    addss xmm1, xmm2                        ; xmm1 = 1 + x / 1
+    ; Вычисление (a - x)
+    movss xmm0, dword [a]                  ; xmm0 = a
+    subss xmm0, dword [x]                  ; xmm0 = a - x
 
-    ; x^2 / 2!
-    movaps xmm2, xmm0                       ; Копируем x в xmm2
-    mulss xmm2, xmm0                        ; xmm2 = x^2
-    mulss xmm2, dword [coefficients + 8]    ; xmm2 = x^2 / 2
-    addss xmm1, xmm2                        ; xmm1 += x^2 / 2
+    ; Вычисление (a - x) * b
+    mulss xmm0, dword [b]                  ; xmm0 = (a - x) * b
 
-    ; x^3 / 3!
-    movaps xmm2, xmm0                       ; Копируем x в xmm2
-    mulss xmm2, xmm0                        ; xmm2 = x^3
-    mulss xmm2, xmm0                        ; xmm2 = x^3
-    mulss xmm2, dword [coefficients + 12]   ; xmm2 = x^3 / 6
-    addss xmm1, xmm2                        ; xmm1 += x^3 / 6
-
-    ; x^4 / 4!
-    movaps xmm2, xmm0                       ; Копируем x в xmm2
-    mulss xmm2, xmm0                        ; xmm2 = x^4
-    mulss xmm2, xmm0                        ; xmm2 = x^4
-    mulss xmm2, xmm0                        ; xmm2 = x^4
-    mulss xmm2, dword [coefficients + 16]   ; xmm2 = x^4 / 24
-    addss xmm1, xmm2                        ; xmm1 += x^4 / 24
+    ; Вычисление y = ((a - x) * b) / c
+    divss xmm0, dword [c]                  ; xmm0 = ((a - x) * b) / c
 
     ; Сохранение результата
+<<<<<<< HEAD
+    movss dword [y], xmm0                  ; Сохранить y в память
+
+    ; Завершение программы
+    mov eax, 60                            ; Системный вызов exit
+    xor edi, edi                           ; Код завершения 0
+    ret                                    ; Вызов системного вызова
+=======
     movss dword [exp_result], xmm1          
     ret
 
@@ -48,3 +45,4 @@ main:
     mov eax, 60                             
     xor edi, edi                            
     ret                                
+>>>>>>> be6efe46df7b98f4602dad96e3ad3725cccca52d
