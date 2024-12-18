@@ -1,7 +1,7 @@
 %include "io64.inc"
 
 section .data
-    x: dd 8.6                
+    x: dd 8.2               
     
 section .bss
     result_x87: resd 1      ; Результат округления с использованием x87
@@ -25,7 +25,7 @@ set_round_downward:
 ; Округление через SSE 
 round_with_sse:
     movd xmm0, dword [x]      
-    roundss xmm0, xmm0, 0     ; Округляем значение в `xmm0`
+    roundss xmm0, xmm0, 1     ; Округляем значение в `xmm0`
     cvtss2si eax, xmm0        ; Преобразуем в целое
     mov [result_sse], eax     
     ret                       
@@ -42,5 +42,5 @@ main:
     
     ; Реализация с использованием SSE
     call round_with_sse         ; Выполнить округление через SSE
-    PRINT_DEC 4, result_x87
+    PRINT_DEC 4, result_sse
     ret
