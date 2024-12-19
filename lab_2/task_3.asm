@@ -14,61 +14,59 @@ global main
 
 main:
 
-    mov rbp, rsp    ; Для корректной отладки
-
     ; Вычисление дискриминанта
-    fld dword [b]         ; ST(0) = b
-    fmul st0, st0         ; ST(0) = b^2
-    fld dword [a]         ; ST(0) = a, ST(1) = b^2
-    fld dword [c]         ; ST(0) = c, ST(1) = a, ST(2) = b^2
-    fmul st0, st1         ; ST(0) = a * c, ST(1) = b^2
-    fld dword [k]         ; ST(0) = k, ST(1) = a * c, ST(2) = b^2
-    fmul st0, st1         ; ST(0) = k * a * c, ST(1) = b^2
-    fsub st3, st0         ; ST(0) = b^2 - k * a * c
-    fxch st3
-    fstp dword [D]        ; Сохранение дискриминанта
+    fld dword [b] ; +1        
+    fmul st0, st0       
+    fld dword [a]         
+    fld dword [c]       
+    fmul        
+    fld dword [k]         
+    fmul     
+    fsub         
+    fst dword [D]        ; Сохранение дискриминанта
+
 
     ; Проверка дискриминанта
-    fld dword [D]         ; Загрузка дискриминанта
-    ftst                  ; Сравнение с 0
+    
+    ftst                  ; Сравнение с 0 
     fstsw ax
     sahf
     jp no_real_roots      ; Переход при D < 0
     
     ; Вычисление sqrt(D)
-    fsqrt                ; ST(0) = sqrt(D)
+    fsqrt                
 
     ; Вычисление x1 = (-b + sqrt(D)) / (2a)
-    fld dword [b]        ; ST(0) = b, ST(1) = sqrt(D)
-    fchs                 ; ST(0) = -b, ST(1) = sqrt(D)
-    fadd                 ; ST(0) = -b + sqrt(D)
-    fld dword [a]        ; ST(0) = a, ST(1) = -b + sqrt(D)
-    fld1                 ; ST(0) = 1, ST(1) = a, ST(2) = -b + sqrt(D)
-    fadd                 ; ST(0) = 2a, ST(1) = -b + sqrt(D)
-    fdiv                 ; ST(0) = x1
+    fld dword [b]        
+    fchs                 
+    fadd                 
+    fld dword [a]        
+    fld1                 
+    fadd                 
+    fdiv                 
     fstp dword [x1]      ; Сохранение x1
 
     ; Вычисление x2 = (-b - sqrt(D)) / (2a)
-    fld dword [b]        ; ST(0) = b
-    fchs                 ; ST(0) = -b
-    fld dword [D]        ; ST(0) = sqrt(D), ST(1) = -b
-    fsqrt                ; ST(0) = sqrt(D), ST(1) = -b
-    fsub                 ; ST(0) = -b - sqrt(D)
-    fld dword [a]        ; ST(0) = a, ST(1) = -b - sqrt(D)
-    fld1                 ; ST(0) = 1, ST(1) = a, ST(2) = -b - sqrt(D)
-    fadd                 ; ST(0) = 2a, ST(1) = -b - sqrt(D)
-    fdiv                 ; ST(0) = x2
+    fld dword [b]        
+    fchs                 
+    fld dword [D]        
+    fsqrt                
+    fsub                 
+    fld dword [a]        
+    fld1                 
+    fadd                 
+    fdiv                 
     fstp dword [x2]      ; Сохранение x2
-
     jmp end_program
 
 no_real_roots:
-    ; Если дискриминант меньше 0, установить x1 и x2 как NaN
+    ; Если дискриминант меньше 0, x1 и x2 = NaN
     fldz
     fstp dword [x1]
     fstp dword [x2]
 
 end_program:
-    finit
-    xor rax, rax
+    
+    xor eax, eax 
     ret
+    

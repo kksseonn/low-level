@@ -10,20 +10,19 @@ section .rodata
 section .text
 global main
 
-main:
-    mov rbp, rsp             
+main:       
 
     ; 1. Вычисляем a * x
-    fld qword [a]              ; st(0) = a
-    fld qword [x]              ; st(0) = x, st(1) = a
-    fmul                       ; st(0) = a * x
+    fld qword [a]              
+    fld qword [x]              
+    fmul                       
 
     ; 2. Вычисляем cos(a * x)
-    fcos                       ; st(0) = cos(a * x)
+    fcos                       
 
     ; 3. Сравниваем с y
-    fld qword [y]              ; st(0) = y, st(1) = cos(a * x)
-    fcomip st0, st1            ; сравниваем y и cos(a * x)
+    fld qword [y]              
+    fcomip st0, st1            
     fstp st0                   ; очищаем стек
 
     ; 4. Выводим результат

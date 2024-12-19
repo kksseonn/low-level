@@ -4,22 +4,21 @@ section .data
     x: dd 8.2               
     
 section .bss
-    result_x87: resd 1      ; Результат округления с использованием x87
-    result_sse: resd 1      ; Результат округления с использованием SSE
+    result_x87: resd 1      
+    result_sse: resd 1      
 
 section .text
 global main
 
-; Установка режима округления вниз для x87
 set_round_downward:
     sub rsp, 8                ; Выделяем 8 байт в стеке для временного хранения регистра состояния FPU
-    fstcw [rsp]               
+    fstcw [rsp]               ;сохраняем текущее состояние
     movzx eax, word [rsp]     ; Загружаем младшие 16 бит из сохранённого состояния в eax
-    and eax, 0xF3FF           ; Сбрасываем режим округления
-    or eax, 0x0400            ; Устанавливаем новый режим округления
+    and eax, 0xF3FF           ; Сбрасываем 10 и 11 биты
+    or eax, 0x0400            ; Устанавливаем новый 10 бит
     mov [rsp], ax             
-    fldcw [rsp]               ; Загружаем обратно в x87.
-    add rsp, 8                ; Освобождаем 8 байт стека.
+    fldcw [rsp]               ; Загружаем обратно
+    add rsp, 8                ; Освобождаем память
     ret                       
 
 ; Округление через SSE 

@@ -9,24 +9,19 @@ section .text
 global main
 
 main:
-    mov rbp, rsp                           ; Для корректной отладки
-
     ; Вычисление (a - x)
-    movss xmm0, dword [a]                  ; xmm0 = a
-    subss xmm0, dword [x]                  ; xmm0 = a - x
-
+    movss xmm0, dword [a]                 
+    subss xmm0, dword [x]                  
     ; Вычисление (a - x) * b
-    mulss xmm0, dword [b]                  ; xmm0 = (a - x) * b
+    mulss xmm0, dword [b]                  
 
     ; Вычисление y = ((a - x) * b) / c
-    divss xmm0, dword [c]                  ; xmm0 = ((a - x) * b) / c
+    divss xmm0, dword [c]                 
 
     ; Сохранение результата
-    movss dword [y], xmm0                  ; Сохранить y в память
+    movss dword [y], xmm0                 
 
-    ; Завершение программы
-    mov eax, 60                            ; Системный вызов exit
-    xor edi, edi                           ; Код завершения 0
-    ret                                    ; Вызов системного вызова
-
-
+                       ; Системный вызов exit
+    xor eax, eax                          ; Код завершения 0
+    ret                              
+    
