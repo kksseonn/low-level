@@ -1,57 +1,86 @@
-%include "io64.inc"
-section .data
-    P         dd 499                          ; Константа P
-    Q         dd 547                          ; Константа Q
-    N         dd 0                            ; Переменная для N
-
-section .bss
-    seed      resd 1                           ; Переменная для хранения seed
-    x         resd 1                           ; Текущее значение x
-    count     resd 1                           ; Счётчик цикла
+section .rodata
+  msg1: db "Enter seed:", 0
+  fmt: db "%u", 0
+  fmt_output: db "%u", 10, 0
+    
+extern printf
+extern scanf
+extern malloc
+extern free
 
 section .text
-CEXTERN printf, scanf
-    global main
+global main
+main:    
+    push ebp                          
+    mov ebp, esp                     
 
-main:
-    ; Вычисляем N = P * Q
-    mov eax, [P]                               ; Загружаем P в регистр eax
-    imul eax, [Q]                              ; Умножаем P на Q
-    mov [N], eax                               ; Сохраняем результат в N
+    push msg1                         
+    call printf                      
+    add esp, 4                       
 
-    ; Ввод seed
-    GET_UDEC 4, [seed]                         ; Читаем 4-байтовое беззнаковое число (seed)
-    PRINT_UDEC 4, [seed]                       ; Печатаем введённое значение seed
-    NEWLINE                                    ; Печатаем новую строку
-    
-    ; Основной цикл
-    mov eax, [seed]                            ; Загружаем seed в регистр eax
-    imul eax, eax                              ; x = seed * seed
-    mov ebx, [N]                               ; Загружаем N в регистр ebx
-    xor edx, edx                               ; Обнуляем edx перед делением
-    div ebx                                     ; x = (seed * seed) % N
-    mov [x], edx                               ; Сохраняем результат в x (остаток от деления)
+    sub esp, 8                       
+    lea eax, [rel fmt]                
+    mov [esp], eax                    ; Помещаем адрес формата в стек
+    lea eax, [ebp -4]                
+    mov [esp+4], eax                 
+    call scanf                        
+    add esp, 8                        
+    mov edi, [ebp -4]                 ; Загружаем считанный seed в регистр edi
 
-    mov dword [count], 100                    ; Инициализация счётчика (100 итераций)
+    mov eax, 16                       
+    push eax                          
+    call malloc                       
+    add esp, 4                        
+    mov ebx, eax                      ; Сохраняем адрес выделенной памяти в ebx
 
-cycle_start:
-    mov eax, [x]                               ; Загружаем текущее значение x
-    imul eax, eax                              ; x = x * x
-    mov ebx, [N]                               ; Загружаем N в регистр ebx
-    xor edx, edx                               ; Обнуляем edx перед делением
-    div ebx                                     ; x = (x * x) % N
-    mov [x], edx                               ; Сохраняем результат в x (остаток от деления)
+    ; Инициализация памяти генератора
+    mov dword [ebx], 0                
+    mov dword [ebx + 4], 0            
+    mov dword [ebx + 8], 0            
+    mov dword [ebx + 12], edi         ; Устанавливаем seed в четвёртую ячейку памяти
 
-    mov eax, [x]                               ; Загружаем текущее значение x
-    and eax, 0xFFFF                            ; result = x & 0xFFFF
-    PRINT_UDEC 4, eax                         ; Печатаем результат как 4-байтовое беззнаковое число
-    NEWLINE                                   ; Печатаем новую строку
+    xor edi, edi                      ; Обнуляем счётчик итераций
 
-    dec dword [count]                          ; Уменьшаем счётчик на 1
-    jnz cycle_start                            ; Переход к началу цикла, если count > 0
+.cycle_start: 
+    mov esi, [ebx + 12]               ; Загружаем текущее состояние генератора
+    mov edx, [ebx]                    ; Загружаем предыдущее значение генератора
 
-    ; Завершение программы
-    mov eax, 1                                 
-    xor ebx, ebx                              
-    ret
+    ; Перемещаем состояние для обновления
+    mov eax, [ebx + 8]
+    mov [ebx + 12], eax
+    mov eax, [ebx + 4]
+    mov [ebx + 8], eax
+    mov [ebx + 4], edx
 
+    ; Генерация нового значения с использованием побитовых операций
+    mov eax, esi
+    shl eax, 11                       ; Логический сдвиг влево на 11 бит
+    xor esi, eax                      ; Побитовый XOR текущего значения
+    mov eax, esi
+    shr eax, 8                        ; Логический сдвиг вправо на 8 бит
+    xor esi, eax                      ; Побитовый XOR
+    xor esi, edx                      ; XOR с предыдущим значением генератора
+    mov eax, edx
+    shr eax, 19                       ; Логический сдвиг вправо на 19 бит
+    xor esi, eax                      ; Побитовый XOR
+    mov [ebx], esi                    ; Сохраняем новое значение генератора
+
+    ; Вывод случайного числа
+    push dword [ebx]                  ; Передаём значение генератора в стек
+    push fmt_output                   ; Передаём формат вывода в стек
+    call printf                       ; Выводим случайное число
+    add esp, 8                        ; Очищаем стек после вызова printf
+
+    add edi, 1                        ; Увеличиваем счётчик итераций
+    cmp edi, 100                      ; Проверяем, выполнено ли 100 итераций
+    jge .cycle_end                    
+
+    jmp .cycle_start                  
+
+.cycle_end:
+    push ebx                          
+    call free                        
+    add esp, 4                       
+
+    leave                             
+    ret                               
